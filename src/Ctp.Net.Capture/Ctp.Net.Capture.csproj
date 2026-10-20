@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>Ctp.Net.Capture</AssemblyName>
+    <RootNamespace>Ctp.Net.Capture</RootNamespace>
+  </PropertyGroup>
+
+  <!-- 官方 SDK wrapper（② ctp-net-core，跨仓相对路径——兄弟仓并排约定）：本工具的全部依赖闭包（零 PackageReference） -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\ctp-net-core\src\Ctp.Net.Core\Ctp.Net.Core.csproj" />
+  </ItemGroup>
+
+</Project>
