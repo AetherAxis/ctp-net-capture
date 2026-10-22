@@ -529,7 +529,7 @@ internal static class FrontGen
         // strings 证实 Lz4Protocol.cpp——不逆向）；过滤单合约（421B）走 tag 协议（路由 0103344C，op E104E2802F）。
         // 本地前置只回上市表（小）⇒ tag 模板即可。请求侧 op E104E2802E、reqId 标签族 E1 01 01 5D E3；
         // 响应 instance/reqId 回显请求值。多行 = 每合约一帧同写（首帧 verbatim isLast——isLast 编码未逆向，
-        // 多合约时只有首行到达 SDK，v1 边界：默认上市表 = 单合约 zx001）。
+        // 多合约时只有首行到达 SDK，v1 边界：早期单合约上市形态）。
         var pQryInst = allPayloads.Where(p => p.Length is > 100 and < 1000
                 && p.AsSpan(4, 5).SequenceEqual(Hx("E104E2802F")))
             .OrderBy(p => p.Length).FirstOrDefault()
