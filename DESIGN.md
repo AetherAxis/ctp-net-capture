@@ -39,10 +39,10 @@ CTP 家族的协议取证工具，三合一：抓包（记录代理 + 官方 SDK
 - **理由**：模板是抓包原样字节，属证据；分仓让 ⑤ 不被临时目录绑住。
 - **代价**：产物入库而生成器在另一仓，漂移无人发现（6.1/6.2）。
 
-### 3.4 三种模式靠首参分发
+### 3.4 四种模式靠首参分发
 
-- **决策**：首参 `gen` → `FrontGen`；`tcp:` 前缀 → `DirectTest`；其余 → 抓包模式。
-- **理由**：位置参数与选项天然互斥，首参守卫即可，无需 CLI 框架。
+- **决策**：首参 `gen` → `FrontGen`；`proxy` → 纯代理模式（只起 `RecordingProxy`，不驱动 SDK）；`tcp:` 前缀 → `DirectTest`；其余 → 抓包模式。
+- **理由**：位置参数与选项天然互斥，首参守卫即可，无需 CLI 框架。`DirectTest` 只跑「登录+结算+三查」，查合约 1.7 万行、多行持仓/报单、行情 tick 这些场景得由业务客户端（⑬ console / 桌面端）自己发起——`proxy` 就是给它们用的旁路录制口。
 - **代价**：无 `--help`，非法选项静默回退默认值。
 
 ## 4. 运行与验证
@@ -52,13 +52,17 @@ CTP 家族的协议取证工具，三合一：抓包（记录代理 + 官方 SDK
 dotnet run --project src/Ctp.Net.Capture -- --front tcp://<host>:10130 --mdfront tcp://<host>:10131 --user <账号> --password <密码> --broker 9999
 dotnet run --project src/Ctp.Net.Capture -- tcp://<host> <账号> <密码>
 dotnet run --project src/Ctp.Net.Capture -- gen <trade.txt...> [输出.cs]
+# 纯代理（第三方客户端接 127.0.0.1:<监听端口> 即可，Ctrl+C 结束录制）
+dotnet run --project src/Ctp.Net.Capture -- proxy <监听端口> tcp://<host>:<port> <输出.txt>
 ```
 
 验证是 E2E：`DirectTest` 打出「登录成功 + 三查通过」即链路成立；`FrontGen` 的断言即生成期验收；产物由 ⑤ 的 E2E（SDK 即裁判）裁决。CI 只跑 Release 构建。
 
 ## 5. 升级记录（2026-10-24）
 
-本轮**代码零变更**：调查开始时 `git status --short` 与 `git diff` 均为空，HEAD 停在 `2d5fe1c`；源码与 CI 均未改，唯一新增是本文件（会话期间 `.gitignore` 另有一条非本任务改动）。本仓是纯工具，静态重构无法在无凭据环境验证；且零包依赖、零内部 API 面，无需跟随升级的契约。
+- **`proxy` 纯代理模式**（`Program.cs`）：真前置凭据到手后要对齐「查合约 1.7 万行 / 多行持仓 / 多行报单 / 行情 tick」，而 `DirectTest` 只跑登录+结算+三查，覆盖不到这些场景。加首参 `proxy <监听端口> <前置> <输出.txt>`：只起 `RecordingProxy`，由业务客户端（⑬ console）连代理发起查询，代理只落字节。首次用它抓到了真前置 17335 行查合约（4096B 分块二进制）与 `E4F103` tick 两种形态。
+- **macOS frameworks 复制目标**（`Ctp.Net.Capture.csproj`）：`ctp_native` 的 `@rpath` 依赖 `thosttraderapi_se/thostmduserapi_se/MacDataCollect` 三个 framework，② `Ctp.Net.Core` 的 Content 只带 `build/native` 的 dylib/so/so ⇒ 首次跑本工具直接 `DllNotFoundException`。照 ⑤ 测试工程的同款 `AfterTargets="Build"` 目标复制到输出目录，不再需要手工 cp。
+- 零 PackageReference 的依赖闭包未变（框架复制是 `Exec cp -R`，不引包）。
 
 ## 6. 待升级项
 
@@ -68,4 +72,4 @@ dotnet run --project src/Ctp.Net.Capture -- gen <trade.txt...> [输出.cs]
 | 2 | P0 | 生成器与产物已漂移 | ⑤ 产物含 `EscapedGbkFixed` 与「2026-10-13 手改批」，`FrontGen` 只发 `EscapedGbk`，且注明「原始抓包已清空」 | 把手改回灌进 `FrontGen`，用 #1 的 diff 锁定 | 需重建样本 |
 | 3 | P1 | 生成不可在 CI 复现 | M2/M3 帧来自 v1 拒绝对、v2 推送、v3 多会话，需真前置凭据 | 裁剪必要帧为脱敏样本入仓 | 触及凭据红线 |
 | 4 | P1 | 断言与抓包强绑 | `BalHex`、余额 6 命中、`ExtractDay` 等均硬编码 | 余额按 E0 转义结构扫描 8 逻辑字节自推导 | 报错精度下降 |
-| 5 | P2 | 端口固定不可并行 | `Program.cs` 写死 17001/17002，`DirectTest` proxy 写死 17001 | 端口可参数化或动态分配 | 需同步 README |
+| 5 | P2 | 端口固定不可并行 | 抓包模式写死 17001/17002，`DirectTest` proxy 写死 17001（`proxy` 模式已可传端口，2026-10-24） | 端口可参数化或动态分配 | 需同步 README |

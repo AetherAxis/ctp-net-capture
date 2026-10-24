@@ -14,4 +14,17 @@
     <ProjectReference Include="..\..\..\ctp-net-core\src\Ctp.Net.Core\Ctp.Net.Core.csproj" />
   </ItemGroup>
 
+  <!-- libctp_native.dylib 的 @rpath 依赖三个 macOS frameworks（thosttraderapi_se/thostmduserapi_se/MacDataCollect）——
+       Ctp.Net.Core 的 Content 只带 build/native 的 dylib/so/dll，frameworks 不在其中；缺一个即
+       DllNotFoundException（2026-10-24 首次跑本工具实测）。此处构建后复制到输出目录，与 ⑤ 测试工程同款。 -->
+  <PropertyGroup>
+    <CtpSdkDir>$(MSBuildThisFileDirectory)../../../ctp-net-core/ctp-sdk/macos-universal</CtpSdkDir>
+  </PropertyGroup>
+  <Target Name="CopyCtpMacFrameworks" AfterTargets="Build" Condition="$([MSBuild]::IsOSPlatform('OSX'))">
+    <Message Importance="high" Text="复制 CTP macOS frameworks → $(OutDir)" />
+    <Exec Command='cp -R "$(CtpSdkDir)/thosttraderapi_se.framework" "$(OutDir)"' />
+    <Exec Command='cp -R "$(CtpSdkDir)/thostmduserapi_se.framework" "$(OutDir)"' />
+    <Exec Command='cp -R "$(CtpSdkDir)/MacDataCollect.framework" "$(OutDir)"' />
+  </Target>
+
 </Project>

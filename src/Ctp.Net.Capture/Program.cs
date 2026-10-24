@@ -36,6 +36,27 @@ if (directArgs.Length > 0 && directArgs[0] == "gen")
     return;
 }
 
+// 首参 proxy → 纯代理模式（2026-10-24）：只起 RecordingProxy，不驱动任何 SDK 会话——
+// 供**任意第三方客户端**（如 ⑬ Aether.CtpConsole、桌面端）走代理打真前置，录制原始帧。
+//   dotnet run --project ctp-net-capture/src/Ctp.Net.Capture -- proxy <监听端口> <前置 tcp://host:port> <输出.txt>
+// 用途：DirectTest 只跑「登录+结算+三查」，抓不到查合约/多行持仓/多行报单/行情；
+// 这类场景由业务客户端自己发起，代理只负责落字节（不解析不修改）。
+if (directArgs.Length > 0 && directArgs[0] == "proxy")
+{
+    if (directArgs.Length < 4)
+    {
+        Console.WriteLine("用法: proxy <监听端口> <前置 tcp://host:port> <输出.txt>");
+        return;
+    }
+    using var standalone = new RecordingProxy(int.Parse(directArgs[1]), directArgs[2], "Standalone", directArgs[3]);
+    standalone.Start();
+    Console.WriteLine("[Proxy] Ctrl+C 结束录制");
+    var quit = new TaskCompletionSource();
+    Console.CancelKeyPress += (_, e) => { e.Cancel = true; quit.TrySetResult(); };
+    await quit.Task;
+    return;
+}
+
 // 首参 tcp: 前缀 → 直连测试（DirectTest）：与抓包模式的 --xxx 选项风格互斥，分发无歧义
 if (directArgs.Length > 0 && directArgs[0].StartsWith("tcp:", StringComparison.OrdinalIgnoreCase))
 {
