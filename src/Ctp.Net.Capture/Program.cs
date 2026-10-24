@@ -198,7 +198,7 @@ var tradeTask = Task.Run(async () =>
         // ── 场景④：撤场景③的单（预期成功 ㉒ + OnRtnOrder '5'）──
         Console.WriteLine("[Trader] 场景④ OrderAction（撤场景③挂单，预期成功 ㉒）…");
         await trader.OrderActionAsync(brokerId, userId, loginResult.FrontID, loginResult.SessionID,
-            rest.OrderRef, exchangeId, cts.Token);
+            rest.OrderRef, exchangeId, null, cts.Token);
         Console.WriteLine("[Trader] 场景④ 撤单应答已收（OnRspOrderAction 正常返回）");
         await Task.Delay(3000, cts.Token);
 
