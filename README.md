@@ -27,7 +27,7 @@ dotnet run --project ctp-net-capture/src/Ctp.Net.Capture -- tcp://127.0.0.1:1780
 # 纯代理模式（只起记录代理，不驱动 SDK——供任意第三方客户端走代理打真前置，落原始帧）
 #   用于 DirectTest 覆盖不到的场景：查合约（1.7 万行）、多行持仓、多行报单、行情 tick。
 dotnet run --project ctp-net-capture/src/Ctp.Net.Capture -- proxy 17003 tcp://182.254.243.31:40001 /tmp/trade.txt
-#   然后让客户端连 127.0.0.1:17003 即可（⑬ console：--front tcp://127.0.0.1:17003）
+#   然后让客户端连 127.0.0.1:17003 即可（⑧ console：--front tcp://127.0.0.1:17003）
 
 # 模板生成（抓包 trade.txt → CtpFrontTemplates.cs；默认输出指向兄弟仓 ctp-net-front）
 dotnet run --project ctp-net-capture/src/Ctp.Net.Capture -- gen <trade.txt...> [输出.cs]
